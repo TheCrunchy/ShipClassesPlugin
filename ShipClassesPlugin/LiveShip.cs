@@ -11,11 +11,13 @@ namespace ShipClassesPlugin
     {
         public String ClassName;
         public long GridEntityId;
-        public Boolean HasWorkingBeacon = true;
+        public Boolean HasWorkingBeacon = false;
         public Dictionary<String, int> UsedLimitsPerDefinition = new Dictionary<string, int>();
 
         //block pair name as key, blockdefinitionName as value, easy reference without looping over lists every time
         public Dictionary<String, String> BlockDefinitionNames = new Dictionary<string, string>();
+
+       
 
         //we want to only do the checks for if they should be enabled on a timer, if the time isnt above that, we just dont allow the block to be enabled if it has the boolean as false 
         public DateTime NextCheck = DateTime.Now;
@@ -28,8 +30,9 @@ namespace ShipClassesPlugin
             }
             if (UsedLimitsPerDefinition.TryGetValue(definition.BlocksDefinitionName, out int count))
             {
-                if (count < definition.MaximumAmount)
+                if (count < definition.MaximumAmount + 1)
                 {
+                    ShipClassPlugin.Log.Info("COUNT " + count);
                     UsedLimitsPerDefinition[definition.BlocksDefinitionName] += 1;
                     return false;
                 }
@@ -41,6 +44,7 @@ namespace ShipClassesPlugin
             }
             else
             {
+                ShipClassPlugin.Log.Info("ADDING NEW GYRO");
                 UsedLimitsPerDefinition.Add(definition.BlocksDefinitionName, 1);
                 return false;
             }
@@ -64,33 +68,51 @@ namespace ShipClassesPlugin
                         //in this method, we add to the number for that limited block
 
                         //return the opposite of this because weird code
-                        return !IsThisBlockAtMaxLimit(blockPairName, def.GetBlocksDefinition(BlockDefinitionName));
+                        if (def.GetBlocksDefinition(BlockDefinitionName) != null)
+                        {
+                            return !IsThisBlockAtMaxLimit(blockPairName, def.GetBlocksDefinition(BlockDefinitionName));
+                        }
+                        else
+                        {
+                            return true;
+                        }
                     }
                     //it didnt have it, so now we loop over the list once until we get it, then store that name for later reference
                     else
                     {
                         BlockId id = new BlockId();
                         id.BlockPairName = blockPairName;
+                        string temp = "";
                         Boolean Found = false;
                         foreach (BlocksDefinition definition in def.DefinedBlocks)
                         {
-                            if (!Found)
+                            if (Found)
                                 continue;
-                            if (definition.blocks.Contains(id))
+                            BlockId result = definition.blocks.FirstOrDefault(x => x.BlockPairName.Equals(id.BlockPairName));
+                            if (result != null)
                             {
                                 BlockDefinitionNames.Add(blockPairName, definition.BlocksDefinitionName);
+                                temp = definition.BlocksDefinitionName;
                                 Found = true;
                             }
                         }
                         if (!Found)
                         {
                             BlockDefinitionNames.Add(blockPairName, "UNLIMITED");
+                           // ShipClassPlugin.Log.Info("FAILING HERE");
                             return true;
                         }
 
                         //in this method, we add to the number for that limited block
                         //return the opposite of this because weird code
-                        return !IsThisBlockAtMaxLimit(blockPairName, def.GetBlocksDefinition(BlockDefinitionName));
+                        if (def.GetBlocksDefinition(temp) != null)
+                        {
+                            return !IsThisBlockAtMaxLimit(blockPairName, def.GetBlocksDefinition(temp));
+                        }
+                        else
+                        {
+                            return true;
+                        }
                     }
                 }
                 else

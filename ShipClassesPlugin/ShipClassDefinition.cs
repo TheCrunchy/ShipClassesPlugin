@@ -22,7 +22,7 @@ namespace ShipClassesPlugin
             _DefinedBlocks.Clear();
             foreach (BlocksDefinition def in DefinedBlocks)
             {
-                if (_DefinedBlocks.ContainsKey(def.BlocksDefinitionName))
+                if (!_DefinedBlocks.ContainsKey(def.BlocksDefinitionName))
                 {
                     _DefinedBlocks.Add(def.BlocksDefinitionName, def);
                     foreach (BlockId id in def.blocks)
@@ -30,6 +30,17 @@ namespace ShipClassesPlugin
                         LimitsForBlocks.Add(id.BlockPairName, def.MaximumAmount);
                         //Also add these to a static dictionary that stores a list using the blocks pair name as key, the list should store the Names for the classes
                         //if a gun works with multiple beacons, we want that to work 
+                        if (ShipClassPlugin.LimitedBlocks.TryGetValue(id.BlockPairName, out List<String> tee))
+                        {
+                            tee.Add(Name);
+                            ShipClassPlugin.LimitedBlocks[id.BlockPairName] = tee;
+                        }
+                        else
+                        {
+                            List<String> temp = new List<string>();
+                            temp.Add(Name);
+                            ShipClassPlugin.LimitedBlocks.Add(id.BlockPairName, temp);
+                        }
                     }
                 }
             }

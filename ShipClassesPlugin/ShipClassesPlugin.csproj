@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="NLog">
       <HintPath>..\..\..\4 Torch Server\DedicatedServer64\NLog.dll</HintPath>
     </Reference>
@@ -66,8 +70,13 @@
     <Reference Include="VRage.Game">
       <HintPath>..\..\FixPlayerCommand\FixPlayerCommand\bin\Debug\VRage.Game.dll</HintPath>
     </Reference>
+    <Reference Include="VRage.Library">
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\VRage.Library.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config.cs" />
+    <Compile Include="FileUtils.cs" />
     <Compile Include="LiveShip.cs" />
     <Compile Include="ShipClassDefinition.cs" />
     <Compile Include="ShipClassPlugin.cs" />

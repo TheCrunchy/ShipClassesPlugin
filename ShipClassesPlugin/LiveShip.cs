@@ -32,7 +32,7 @@ namespace ShipClassesPlugin
             {
                 if (count < definition.MaximumAmount)
                 {
-                    ShipClassPlugin.Log.Info("COUNT " + count);
+                 //   ShipClassPlugin.Log.Info("COUNT " + count);
                     UsedLimitsPerDefinition[definition.BlocksDefinitionName] += 1;
                     return false;
                 }
@@ -44,7 +44,7 @@ namespace ShipClassesPlugin
             }
             else
             {
-                ShipClassPlugin.Log.Info("ADDING NEW GYRO");
+              //  ShipClassPlugin.Log.Info("ADDING NEW GYRO");
                 UsedLimitsPerDefinition.Add(definition.BlocksDefinitionName, 1);
                 return false;
             }
@@ -74,7 +74,7 @@ namespace ShipClassesPlugin
                         }
                         else
                         {
-                            ShipClassPlugin.Log.Info("DEFINITION IS NULL 1");
+                         //   ShipClassPlugin.Log.Info("DEFINITION IS NULL 1");
                             return true;
                         }
                     }
@@ -100,7 +100,7 @@ namespace ShipClassesPlugin
                         if (!Found)
                         {
                             BlockDefinitionNames.Add(blockPairName, "UNLIMITED");
-                            ShipClassPlugin.Log.Info("FAILING HERE");
+                        //    ShipClassPlugin.Log.Info("FAILING HERE");
                             return true;
                         }
 
@@ -112,7 +112,7 @@ namespace ShipClassesPlugin
                         }
                         else
                         {
-                            ShipClassPlugin.Log.Info("DEFINITION IS NULL 2");
+                        //    ShipClassPlugin.Log.Info("DEFINITION IS NULL 2");
                             return true;
                         }
                     }

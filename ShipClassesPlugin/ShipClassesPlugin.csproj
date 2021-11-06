@@ -75,6 +75,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="FileUtils.cs" />
     <Compile Include="LiveShip.cs" />

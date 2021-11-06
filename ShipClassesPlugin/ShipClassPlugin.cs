@@ -28,7 +28,7 @@ namespace ShipClassesPlugin
         public static Config config;
 
         private TorchSessionManager sessionManager;
-        FileUtils utils = new FileUtils();
+        public static FileUtils utils = new FileUtils();
         public static Boolean LoadedFiles = false;
         public void SetupConfig()
         {
@@ -68,14 +68,41 @@ namespace ShipClassesPlugin
             }
             //throw new NotImplementedException();
         }
+        public static void ReloadClasses()
+        {
+            config = utils.ReadFromXmlFile<Config>(path + "\\ShipClasses\\config.xml");
+            ActiveShips.Clear();
+            DefinedClasses.Clear();
+            foreach (String s in Directory.GetFiles(path + "\\ShipClasses\\ShipConfigs\\"))
+            {
+                try
+                {
+                    ShipClassDefinition def = utils.ReadFromXmlFile<ShipClassDefinition>(s);
+                    if (def.Enabled)
+                    {
+                        def.SetupDefinedBlocks();
+                        if (!DefinedClasses.ContainsKey(def.Name))
+                        {
+                            DefinedClasses.Add(def.Name, def);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Error reading file " + s);
+                    throw;
+                }
+            }
+        }
 
         private void SessionChanged(ITorchSession session, TorchSessionState state)
         {
             if (state == TorchSessionState.Loaded)
             {
-                try
+
+                foreach (String s in Directory.GetFiles(path + "\\ShipClasses\\ShipConfigs\\"))
                 {
-                    foreach (String s in Directory.GetFiles(path + "\\ShipClasses\\ShipConfigs\\"))
+                    try
                     {
                         ShipClassDefinition def = utils.ReadFromXmlFile<ShipClassDefinition>(s);
                         if (def.Enabled)
@@ -87,12 +114,13 @@ namespace ShipClassesPlugin
                             }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Log.Error("Error reading file " + s);
+                        throw;
+                    }
                 }
-                catch (Exception ex)
-                {
 
-                    throw;
-                }
                 LoadedFiles = true;
             }
         }
@@ -187,18 +215,18 @@ namespace ShipClassesPlugin
                 {
                     return true;
                 }
-                if (DateTime.Now >= oof)
-                {
-                    oof = oof.AddSeconds(30);
-                    foreach (KeyValuePair<String, List<String>> pair in LimitedBlocks)
-                    {
-                        Log.Info(pair.Key);
-                        foreach (String s in pair.Value)
-                        {
-                            Log.Info(s);
-                        }
-                    }
-                }
+                // if (DateTime.Now >= oof)
+                //  {
+                //    oof = oof.AddSeconds(30);
+                //  foreach (KeyValuePair<String, List<String>> pair in LimitedBlocks)
+                //  {
+                //     Log.Info(pair.Key);
+                //     foreach (String s in pair.Value)
+                //    {
+                //      Log.Info(s);
+                //  }
+                //   }
+                //   }
                 if (LimitedBlocks.TryGetValue(__instance.BlockDefinition.BlockPairName, out List<String> ShipClasses))
                 {
                     //  Log.Info("HAS LIMITED BLOCK");
@@ -207,22 +235,22 @@ namespace ShipClassesPlugin
 
                         if (DateTime.Now >= ship.NextCheck)
                         {
-                          
+
                             var Beacons = __instance.CubeGrid.GetFatBlocks().OfType<MyBeacon>();
                             ship.HasWorkingBeacon = false;
-                          
+
                             //so we need to recheck if the grid still has a working beacon with our class ID
                             //should probably change the seconds to a value from the config file
                             ship.NextCheck = DateTime.Now.AddSeconds(config.SecondsBetweenBeaconChecks);
                             ShipClassDefinition shipClass = DefinedClasses[ship.ClassName];
-                         //   foreach (BlocksDefinition defin in shipClass.DefinedBlocks)
-                        //    {
-                         //       if (ship.UsedLimitsPerDefinition.ContainsKey(defin.BlocksDefinitionName))
-                         //       {
-                         //           ship.UsedLimitsPerDefinition[defin.BlocksDefinitionName] = 0;
-                          //      }
-                          //  }
-                          //  EnableTheBlock.Remove(__instance.EntityId);
+                            //   foreach (BlocksDefinition defin in shipClass.DefinedBlocks)
+                            //    {
+                            //       if (ship.UsedLimitsPerDefinition.ContainsKey(defin.BlocksDefinitionName))
+                            //       {
+                            //           ship.UsedLimitsPerDefinition[defin.BlocksDefinitionName] = 0;
+                            //      }
+                            //  }
+                            //  EnableTheBlock.Remove(__instance.EntityId);
                             foreach (MyBeacon beacon in Beacons)
                             {
                                 if (beacon.BlockDefinition.BlockPairName.Equals(shipClass.BeaconBlockPairName))

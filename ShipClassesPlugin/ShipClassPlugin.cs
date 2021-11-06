@@ -51,7 +51,7 @@ namespace ShipClassesPlugin
                 ShipClassDefinition def = new ShipClassDefinition();
                 def.Name = "Example";
                 def.Enabled = false;
-                def.BeaconBlockPairName = ("LargeBlockBeacon");
+                def.BeaconBlockPairName = ("Beacon");
                 BlockId id = new BlockId();
                 id.BlockPairName = "Gyroscope";
                 BlocksDefinition dee = new BlocksDefinition();
@@ -210,11 +210,19 @@ namespace ShipClassesPlugin
                           
                             var Beacons = __instance.CubeGrid.GetFatBlocks().OfType<MyBeacon>();
                             ship.HasWorkingBeacon = false;
+                          
                             //so we need to recheck if the grid still has a working beacon with our class ID
                             //should probably change the seconds to a value from the config file
                             ship.NextCheck = DateTime.Now.AddSeconds(config.SecondsBetweenBeaconChecks);
                             ShipClassDefinition shipClass = DefinedClasses[ship.ClassName];
-                            EnableTheBlock.Remove(__instance.EntityId);
+                         //   foreach (BlocksDefinition defin in shipClass.DefinedBlocks)
+                        //    {
+                         //       if (ship.UsedLimitsPerDefinition.ContainsKey(defin.BlocksDefinitionName))
+                         //       {
+                         //           ship.UsedLimitsPerDefinition[defin.BlocksDefinitionName] = 0;
+                          //      }
+                          //  }
+                          //  EnableTheBlock.Remove(__instance.EntityId);
                             foreach (MyBeacon beacon in Beacons)
                             {
                                 if (beacon.BlockDefinition.BlockPairName.Equals(shipClass.BeaconBlockPairName))
@@ -247,11 +255,18 @@ namespace ShipClassesPlugin
                         else
                         {
                             //so we are failing here, it isnt properly checking limits
-
-                            if (DoChecks(__instance, DefinedClasses[ship.ClassName], ship))
+                            if (ship.HasWorkingBeacon)
                             {
+                                if (DoChecks(__instance, DefinedClasses[ship.ClassName], ship))
+                                {
 
-                                return true;
+                                    return true;
+                                }
+                                else
+                                {
+                                    __instance.Enabled = false;
+                                    return false;
+                                }
                             }
                             else
                             {

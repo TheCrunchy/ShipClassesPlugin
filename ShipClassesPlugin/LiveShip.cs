@@ -30,7 +30,7 @@ namespace ShipClassesPlugin
             }
             if (UsedLimitsPerDefinition.TryGetValue(definition.BlocksDefinitionName, out int count))
             {
-                if (count < definition.MaximumAmount + 1)
+                if (count < definition.MaximumAmount)
                 {
                     ShipClassPlugin.Log.Info("COUNT " + count);
                     UsedLimitsPerDefinition[definition.BlocksDefinitionName] += 1;
@@ -74,6 +74,7 @@ namespace ShipClassesPlugin
                         }
                         else
                         {
+                            ShipClassPlugin.Log.Info("DEFINITION IS NULL 1");
                             return true;
                         }
                     }
@@ -99,7 +100,7 @@ namespace ShipClassesPlugin
                         if (!Found)
                         {
                             BlockDefinitionNames.Add(blockPairName, "UNLIMITED");
-                           // ShipClassPlugin.Log.Info("FAILING HERE");
+                            ShipClassPlugin.Log.Info("FAILING HERE");
                             return true;
                         }
 
@@ -111,6 +112,7 @@ namespace ShipClassesPlugin
                         }
                         else
                         {
+                            ShipClassPlugin.Log.Info("DEFINITION IS NULL 2");
                             return true;
                         }
                     }

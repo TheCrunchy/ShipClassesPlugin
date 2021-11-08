@@ -13,7 +13,7 @@ namespace ShipClassesPlugin
         public long GridEntityId;
         public Boolean HasWorkingBeacon = false;
         public Dictionary<String, int> UsedLimitsPerDefinition = new Dictionary<string, int>();
-
+        public Boolean HasToBeStation = false;
         //block pair name as key, blockdefinitionName as value, easy reference without looping over lists every time
         public Dictionary<String, String> BlockDefinitionNames = new Dictionary<string, string>();
 

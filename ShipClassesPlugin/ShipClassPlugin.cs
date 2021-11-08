@@ -232,7 +232,22 @@ namespace ShipClassesPlugin
                     //  Log.Info("HAS LIMITED BLOCK");
                     if (ActiveShips.TryGetValue(__instance.CubeGrid.EntityId, out LiveShip ship))
                     {
-
+                        if (ship.HasToBeStation)
+                        {
+                            if (!__instance.CubeGrid.IsStatic)
+                            {
+                                __instance.Enabled = false;
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            if (__instance.CubeGrid.IsStatic)
+                            {
+                                __instance.Enabled = false;
+                                return false;
+                            }
+                        }
                         if (DateTime.Now >= ship.NextCheck)
                         {
 
@@ -324,6 +339,7 @@ namespace ShipClassesPlugin
                                             newShip.HasWorkingBeacon = true;
                                             ActiveShips.Remove(newShip.GridEntityId);
                                             ActiveShips.Add(newShip.GridEntityId, newShip);
+                                            newShip.HasToBeStation = def.HasToBeStation;
                                             break;
                                         }
                                     }

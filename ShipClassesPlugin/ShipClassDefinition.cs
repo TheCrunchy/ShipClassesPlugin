@@ -15,8 +15,10 @@ namespace ShipClassesPlugin
         public List<BlocksDefinition> DefinedBlocks = new List<BlocksDefinition>();
         private Dictionary<string, BlocksDefinition> _DefinedBlocks = new Dictionary<string, BlocksDefinition>();
         private Dictionary<string, int> LimitsForBlocks = new Dictionary<string, int>();
+        public Boolean RequiresPilot = false;
         public Boolean HasToBeStation = false;
         //run this after loading the file
+        
         public void SetupDefinedBlocks()
         {
             _DefinedBlocks.Clear();

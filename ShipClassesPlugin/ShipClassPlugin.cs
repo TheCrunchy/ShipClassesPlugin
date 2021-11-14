@@ -248,9 +248,19 @@ namespace ShipClassesPlugin
                                 return false;
                             }
                         }
+
+                       
+                        //do any checks here for if the grid has a pilot
                         if (DateTime.Now >= ship.NextCheck)
                         {
 
+                            //first check if it has a pilot before doing this
+                            if (ship.RequiresPilot && !ship.HasPilot)
+                            {
+                                ship.NextCheck = DateTime.Now.AddSeconds(config.SecondsBetweenBeaconChecks);
+                                __instance.Enabled = false;
+                                return false;
+                            }
                             var Beacons = __instance.CubeGrid.GetFatBlocks().OfType<MyBeacon>();
                             ship.HasWorkingBeacon = false;
 
@@ -320,6 +330,8 @@ namespace ShipClassesPlugin
                     }
                     else
                     {
+                        //We are registering a new ship here, this is when you should check block counts
+
                         LiveShip newShip = new LiveShip();
                         newShip.NextCheck = DateTime.Now.AddSeconds(config.SecondsBetweenBeaconChecks);
                         newShip.GridEntityId = __instance.CubeGrid.EntityId;
@@ -336,6 +348,7 @@ namespace ShipClassesPlugin
                                         if (beacon.IsFunctional && beacon.Enabled)
                                         {
                                             newShip.ClassName = def.Name;
+                                            newShip.RequiresPilot = def.RequiresPilot;
                                             newShip.HasWorkingBeacon = true;
                                             ActiveShips.Remove(newShip.GridEntityId);
                                             ActiveShips.Add(newShip.GridEntityId, newShip);

@@ -16,8 +16,8 @@ namespace ShipClassesPlugin
         public Boolean HasToBeStation = false;
         //block pair name as key, blockdefinitionName as value, easy reference without looping over lists every time
         public Dictionary<String, String> BlockDefinitionNames = new Dictionary<string, string>();
-
-       
+        public Boolean HasPilot = true;
+        public Boolean RequiresPilot = false;
 
         //we want to only do the checks for if they should be enabled on a timer, if the time isnt above that, we just dont allow the block to be enabled if it has the boolean as false 
         public DateTime NextCheck = DateTime.Now;

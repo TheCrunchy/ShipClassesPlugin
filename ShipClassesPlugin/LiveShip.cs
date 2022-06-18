@@ -22,15 +22,15 @@ namespace ShipClassesPlugin
         //we want to only do the checks for if they should be enabled on a timer, if the time isnt above that, we just dont allow the block to be enabled if it has the boolean as false 
         public DateTime NextCheck = DateTime.Now;
 
-        public Boolean IsThisBlockAtMaxLimit(string blockPairName, BlocksDefinition definition)
+        public Boolean IsThisBlockAtMaxLimit(string blockPairName, BlocksDefinition definition, BlockId id)
         {
-            if (definition.MaximumAmount == 0)
+            if (definition.MaximumPoints == 0)
             {
                 return true;
             }
             if (UsedLimitsPerDefinition.TryGetValue(definition.BlocksDefinitionName, out int count))
             {
-                if (count < definition.MaximumAmount)
+                if (count < definition.MaximumPoints && (count + id.points) <= definition.MaximumPoints)
                 {
                  //   ShipClassPlugin.Log.Info("COUNT " + count);
                     UsedLimitsPerDefinition[definition.BlocksDefinitionName] += 1;
@@ -68,9 +68,10 @@ namespace ShipClassesPlugin
                         //in this method, we add to the number for that limited block
 
                         //return the opposite of this because weird code
-                        if (def.GetBlocksDefinition(BlockDefinitionName) != null)
+                        var definition = def.GetBlocksDefinition(BlockDefinitionName);
+                        if (definition != null)
                         {
-                            return !IsThisBlockAtMaxLimit(blockPairName, def.GetBlocksDefinition(BlockDefinitionName));
+                            return !IsThisBlockAtMaxLimit(blockPairName, definition, definition.blocks.FirstOrDefault(x => x.BlockPairName == blockPairName));
                         }
                         else
                         {
@@ -106,9 +107,10 @@ namespace ShipClassesPlugin
 
                         //in this method, we add to the number for that limited block
                         //return the opposite of this because weird code
-                        if (def.GetBlocksDefinition(temp) != null)
+                        var definition2 = def.GetBlocksDefinition(BlockDefinitionName);
+                        if (definition2 != null)
                         {
-                            return !IsThisBlockAtMaxLimit(blockPairName, def.GetBlocksDefinition(temp));
+                            return !IsThisBlockAtMaxLimit(blockPairName, definition2, definition2.blocks.FirstOrDefault(x => x.BlockPairName.Equals(id.BlockPairName)));
                         }
                         else
                         {

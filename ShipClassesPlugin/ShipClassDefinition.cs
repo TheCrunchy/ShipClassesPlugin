@@ -10,6 +10,9 @@ namespace ShipClassesPlugin
     {
         public Boolean Enabled = true;
         public string Name = "Example";
+        public string ClassType = "Frigate";
+        public string ClassSubtype = "Frigate";
+        public int ActiveLimitAmount = 5;
         public int ClassPriority = 1;
         public string BeaconBlockPairName = "SUPERDUPERBEACON";
         public List<BlocksDefinition> DefinedBlocks = new List<BlocksDefinition>();
@@ -29,7 +32,7 @@ namespace ShipClassesPlugin
                     _DefinedBlocks.Add(def.BlocksDefinitionName, def);
                     foreach (BlockId id in def.blocks)
                     {
-                        LimitsForBlocks.Add(id.BlockPairName, def.MaximumAmount);
+                        LimitsForBlocks.Add(id.BlockPairName, def.MaximumPoints);
                         //Also add these to a static dictionary that stores a list using the blocks pair name as key, the list should store the Names for the classes
                         //if a gun works with multiple beacons, we want that to work 
                         if (ShipClassPlugin.LimitedBlocks.TryGetValue(id.BlockPairName, out List<String> tee))
@@ -69,7 +72,7 @@ namespace ShipClassesPlugin
 
         public class BlocksDefinition
         {
-            public int MaximumAmount = 10;
+            public int MaximumPoints = 10;
             public string BlocksDefinitionName = "Example Small Guns";
             public List<BlockId> blocks = new List<BlockId>();
         }
@@ -77,7 +80,9 @@ namespace ShipClassesPlugin
         public class BlockId
         {
             //So this doesnt really need to be a class, but i suppose keeping it as one would be easier for future proofing if we wanted to change any of this
+            //THANKS PAST ME FOR KEEPING THIS AS A CLASS, I DID END UP CHANGING IT
             public string BlockPairName = "Example PairName";
+            public int points = 1;
         }
     }
 }

@@ -12,6 +12,16 @@ using Torch.Session;
 using Torch.API.Managers;
 using static ShipClassesPlugin.ShipClassDefinition;
 using NLog;
+using ProtoBuf;
+using Sandbox.ModAPI;
+using VRage.Game.Entity;
+using VRage.Game.ModAPI.Ingame;
+using Sandbox.Game.Entities;
+using SpaceEngineers.Game.Entities.Blocks;
+using VRageMath;
+using Sandbox.Engine.Physics;
+using VRage.Game.Components;
+using System.Collections.Concurrent;
 
 namespace ShipClassesPlugin
 {
@@ -24,8 +34,36 @@ namespace ShipClassesPlugin
             SetupConfig();
 
         }
+
         public static string path;
         public static Config config;
+
+        [ProtoContract]
+        public class ItemsMessage
+        {
+            [ProtoMember(1)]
+            public long EntityId { get; set; }
+            [ProtoMember(2)]
+            public long SendingPlayerID { get; set; }
+        }
+        [ProtoContract]
+        public class SpeedMessage
+        {
+            [ProtoMember(1)]
+            public long EntityId { get; set; }
+            [ProtoMember(2)]
+            public double WarpSpeed { get; set; }
+        }
+
+        public static void YeetThisFuckingDrive(long entityId)
+        {
+            SpeedMessage data = new SpeedMessage();
+            data.EntityId = entityId;
+            data.WarpSpeed = -1;
+
+            MyAPIGateway.Multiplayer.SendMessageToServer(4378, MyAPIGateway.Utilities.SerializeToBinary<SpeedMessage>(data));
+        }
+
 
         private TorchSessionManager sessionManager;
         public static FileUtils utils = new FileUtils();
@@ -56,7 +94,7 @@ namespace ShipClassesPlugin
                 id.BlockPairName = "Gyroscope";
                 BlocksDefinition dee = new BlocksDefinition();
                 dee.blocks.Add(id);
-                dee.MaximumAmount = 2;
+                dee.MaximumPoints = 2;
                 dee.BlocksDefinitionName = "GYROSCOPE";
                 def.DefinedBlocks.Add(dee);
                 utils.WriteToXmlFile<ShipClassDefinition>(StoragePath + "\\ShipClasses\\ShipConfigs\\example.xml", def, false);
@@ -95,10 +133,46 @@ namespace ShipClassesPlugin
             }
         }
 
+        public static void EntityCreated(MyEntity entity)
+        {
+
+            //  if (entity is MySlimBlock block)
+            //   {
+            //      if (block.BlockDefinition.BlockPairName.Equals("FSDrive")){
+            //         YeetThisFuckingDrive(entity.EntityId);
+            //         Log.Info("YEET THIS FUCKING DRIVE");
+            //     }
+
+            //   }
+            if (entity is MyCubeGrid grid)
+            {
+                //   Log.Info("GRID PASTE");
+                foreach (MyUpgradeModule block in grid.GetFatBlocks().OfType<MyUpgradeModule>())
+                {
+                    if (block.BlockDefinition.BlockPairName.Equals("FSDrive"))
+                    {
+                        YeetThisFuckingDrive(entity.EntityId);
+                        //      Log.Info("YEET THIS FUCKING DRIVE");
+                    }
+                }
+            }
+            //if (entity is IMyUpgradeModule block)
+            //{
+            //  if (block.BlockDefinition.SubtypeName.Contains("FSDrive"))
+            //    {
+            //        YeetThisFuckingDrive(entity.EntityId);
+            //        Log.Info("YEET THIS FUCKING DRIVE");
+            //    }
+
+            //}
+        }
+
         private void SessionChanged(ITorchSession session, TorchSessionState state)
         {
             if (state == TorchSessionState.Loaded)
             {
+                Sandbox.Game.Entities.MyEntities.OnEntityAdd += new Action<MyEntity>(EntityCreated);
+
 
                 foreach (String s in Directory.GetFiles(path + "\\ShipClasses\\ShipConfigs\\"))
                 {
@@ -162,9 +236,11 @@ namespace ShipClassesPlugin
                 ctx.GetPattern(update).Prefixes.Add(updatePatch);
                 ctx.GetPattern(update2).Prefixes.Add(updatePatch);
             }
-
+            static int count = 0;
             public static Boolean DoChecks(MyFunctionalBlock block, ShipClassDefinition shipDefinition, LiveShip ship)
             {
+
+
                 if (!ship.HasWorkingBeacon)
                 {
                     block.Enabled = false;
@@ -207,10 +283,40 @@ namespace ShipClassesPlugin
                 }
                 return true;
             }
-
+            static ConcurrentDictionary<long, Vector3> AccelForces = new ConcurrentDictionary<long, Vector3>();
+            static Dictionary<long, int> UpdateTicks = new Dictionary<long, int>();
             public static Boolean KeepDisabled(MyFunctionalBlock __instance)
             {
                 //  Log.Info("1");
+              //  var speed = __instance.CubeGrid.Physics.Speed;
+              //  var maxSpeed = 10;
+              //  if (speed > maxSpeed)
+              //  {
+              //      //var resistance = 50f * (__instance.CubeGrid.Physics.Mass * 2 )* (1 - (maxSpeed / speed));
+              //      //Vector3 velocity = __instance.CubeGrid.Physics.LinearVelocity * -resistance;
+
+              ////      __instance.CubeGrid.Physics.AddForce(MyPhysicsForceType.APPLY_WORLD_FORCE, velocity, __instance.CubeGrid.Physics.CenterOfMassWorld, null, 10);
+
+              //      var grid = __instance.CubeGrid;
+              //      bool doSpeedUpdate = false;
+              //      if (UpdateTicks.TryGetValue(grid.EntityId, out int ticks))
+              //      {
+              //          if (ticks == 10)
+              //          {
+              //              UpdateTicks[grid.EntityId] = 1;
+              //              doSpeedUpdate = true;
+              //          }
+              //          else
+              //          {
+              //              UpdateTicks[grid.EntityId] += 1;
+              //          }
+              //      }
+              //      else
+              //      {
+              //          UpdateTicks.Add(grid.EntityId, 1);
+              //          doSpeedUpdate = true;
+              //      }
+              //  }
                 if (!LoadedFiles)
                 {
                     return true;
@@ -249,7 +355,7 @@ namespace ShipClassesPlugin
                             }
                         }
 
-                       
+
                         //do any checks here for if the grid has a pilot
                         if (DateTime.Now >= ship.NextCheck)
                         {

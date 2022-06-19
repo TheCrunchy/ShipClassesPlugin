@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ShipClassesPlugin.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,8 +13,9 @@ namespace ShipClassesPlugin
         public string Name = "Example";
         public string ClassType = "Frigate";
         public string ClassSubtype = "Frigate";
-        public int ActiveLimitAmount = 5;
+        public int MaximumActiveAmount = 5;
         public int ClassPriority = 1;
+        public LimitTypeEnum LimitType = LimitTypeEnum.NONE;
         public string BeaconBlockPairName = "SUPERDUPERBEACON";
         public List<BlocksDefinition> DefinedBlocks = new List<BlocksDefinition>();
         private Dictionary<string, BlocksDefinition> _DefinedBlocks = new Dictionary<string, BlocksDefinition>();
@@ -63,6 +65,7 @@ namespace ShipClassesPlugin
 
         public BlocksDefinition GetBlocksDefinition(String BlocksDefinitionName)
         {
+       //     ShipClassPlugin.Log.Info($"ShipClassDefinition 1 {BlocksDefinitionName}");
             if (_DefinedBlocks.TryGetValue(BlocksDefinitionName, out BlocksDefinition def))
             {
                 return def;

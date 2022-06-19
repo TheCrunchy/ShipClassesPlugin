@@ -73,6 +73,7 @@ namespace ShipClassesPlugin
 
             path = StoragePath;
             Directory.CreateDirectory(StoragePath + "\\ShipClasses\\");
+            Directory.CreateDirectory(StoragePath + "\\ShipClasses\\ShipConfigs");
             if (File.Exists(StoragePath + "\\ShipClasses\\config.xml"))
             {
                 config = utils.ReadFromXmlFile<Config>(StoragePath + "\\ShipClasses\\config.xml");
@@ -82,7 +83,6 @@ namespace ShipClassesPlugin
             {
                 config = new Config();
                 utils.WriteToXmlFile<Config>(StoragePath + "\\ShipClasses\\config.xml", config, false);
-                Directory.CreateDirectory(StoragePath + "\\ShipClasses\\ShipConfigs");
             }
             if (!File.Exists(StoragePath + "\\ShipClasses\\ShipConfigs\\example.xml"))
             {
@@ -199,7 +199,6 @@ namespace ShipClassesPlugin
             }
         }
 
-
         //Load the config files into this dictionary
         public static Dictionary<String, ShipClassDefinition> DefinedClasses = new Dictionary<string, ShipClassDefinition>();
 
@@ -209,9 +208,7 @@ namespace ShipClassesPlugin
         //blockpairname as key, the list is the name of the Classes that limit this block
         public static Dictionary<String, List<String>> LimitedBlocks = new Dictionary<string, List<string>>();
 
-
         public static Dictionary<long, Boolean> EnableTheBlock = new Dictionary<long, bool>();
-
 
         public static Logger Log = LogManager.GetLogger("ShipClass");
         public static DateTime oof = DateTime.Now;
@@ -321,18 +318,6 @@ namespace ShipClassesPlugin
                 {
                     return true;
                 }
-                // if (DateTime.Now >= oof)
-                //  {
-                //    oof = oof.AddSeconds(30);
-                //  foreach (KeyValuePair<String, List<String>> pair in LimitedBlocks)
-                //  {
-                //     Log.Info(pair.Key);
-                //     foreach (String s in pair.Value)
-                //    {
-                //      Log.Info(s);
-                //  }
-                //   }
-                //   }
                 if (LimitedBlocks.TryGetValue(__instance.BlockDefinition.BlockPairName, out List<String> ShipClasses))
                 {
                     //  Log.Info("HAS LIMITED BLOCK");

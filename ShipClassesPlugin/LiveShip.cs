@@ -33,7 +33,7 @@ namespace ShipClassesPlugin
                 if (count < definition.MaximumPoints && (count + id.points) <= definition.MaximumPoints)
                 {
                  //   ShipClassPlugin.Log.Info("COUNT " + count);
-                    UsedLimitsPerDefinition[definition.BlocksDefinitionName] += 1;
+                    UsedLimitsPerDefinition[definition.BlocksDefinitionName] += id.points;
                     return false;
                 }
                 else
@@ -45,7 +45,7 @@ namespace ShipClassesPlugin
             else
             {
               //  ShipClassPlugin.Log.Info("ADDING NEW GYRO");
-                UsedLimitsPerDefinition.Add(definition.BlocksDefinitionName, 1);
+                UsedLimitsPerDefinition.Add(definition.BlocksDefinitionName, id.points);
                 return false;
             }
         }
@@ -71,6 +71,7 @@ namespace ShipClassesPlugin
                         var definition = def.GetBlocksDefinition(BlockDefinitionName);
                         if (definition != null)
                         {
+                        //    ShipClassPlugin.Log.Info($"LiveShip 1");
                             return !IsThisBlockAtMaxLimit(blockPairName, definition, definition.blocks.FirstOrDefault(x => x.BlockPairName == blockPairName));
                         }
                         else
@@ -107,7 +108,7 @@ namespace ShipClassesPlugin
 
                         //in this method, we add to the number for that limited block
                         //return the opposite of this because weird code
-                        var definition2 = def.GetBlocksDefinition(BlockDefinitionName);
+                        var definition2 = def.GetBlocksDefinition(temp);
                         if (definition2 != null)
                         {
                             return !IsThisBlockAtMaxLimit(blockPairName, definition2, definition2.blocks.FirstOrDefault(x => x.BlockPairName.Equals(id.BlockPairName)));

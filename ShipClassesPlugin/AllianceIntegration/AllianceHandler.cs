@@ -12,5 +12,10 @@ namespace ShipClassesPlugin.AllianceIntegration
         {
             return Guid.NewGuid();
         }
+
+        public static int GetMaximumAmount(string classType)
+        {
+            return 0;
+        }
     }
 }

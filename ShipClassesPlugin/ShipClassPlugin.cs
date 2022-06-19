@@ -22,6 +22,8 @@ using VRageMath;
 using Sandbox.Engine.Physics;
 using VRage.Game.Components;
 using System.Collections.Concurrent;
+using Torch.Managers;
+using Torch.API.Plugins;
 
 namespace ShipClassesPlugin
 {
@@ -166,7 +168,8 @@ namespace ShipClassesPlugin
 
             //}
         }
-
+        public static MethodInfo GetAllianceLimit;
+        public static Boolean AlliancePluginEnabled = false;
         private void SessionChanged(ITorchSession session, TorchSessionState state)
         {
             if (state == TorchSessionState.Loaded)
@@ -194,6 +197,22 @@ namespace ShipClassesPlugin
                         throw;
                     }
                 }
+
+                if (session.Managers.GetManager<PluginManager>().Plugins.TryGetValue(Guid.Parse("74796707-646f-4ebd-8700-d077a5f47af3"), out ITorchPlugin All))
+                {
+                    Type alli = All.GetType().Assembly.GetType("AlliancesPlugin.Integrations");
+                    try
+                    {
+                        GetAllianceLimit = All.GetType().GetMethod("GetMaximumForShipClassType", BindingFlags.Public | BindingFlags.Static, null, new Type[2] { typeof(string), typeof(string) }, null);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("Error loading the alliance integration");
+
+                    }
+                    AlliancePluginEnabled = true;
+                }
+
 
                 LoadedFiles = true;
             }

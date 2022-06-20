@@ -87,13 +87,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AllianceIntegration\AllianceHandler.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="Enums\LimitTypeEnum.cs" />
     <Compile Include="FileUtils.cs" />
+    <Compile Include="LimitedActiveShips\ActiveLimitsHandler.cs" />
     <Compile Include="LiveShip.cs" />
     <Compile Include="ShipClassDefinition.cs" />
     <Compile Include="ShipClassPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

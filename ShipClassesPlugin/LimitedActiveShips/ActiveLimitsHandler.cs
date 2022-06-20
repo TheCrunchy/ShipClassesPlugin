@@ -10,7 +10,7 @@ namespace ShipClassesPlugin.LimitedActiveShips
     {
         public static Dictionary<string, Dictionary<String, int>> Limited = new Dictionary<string, Dictionary<String, int>>();
 
-        public bool CanShipBeActive(String factionTag, ShipClassDefinition shipClass)
+        public static bool CanShipBeActive(String factionTag, ShipClassDefinition shipClass)
         {
             if (shipClass.LimitType == Enums.LimitTypeEnum.FACTION)
             {
@@ -21,7 +21,7 @@ namespace ShipClassesPlugin.LimitedActiveShips
                 var alliance = AllianceIntegration.AllianceHandler.GetAllianceId(factionTag);
                 if (alliance != Guid.Empty)
                 {
-                    return AddToActiveShips(alliance.ToString(), shipClass, AllianceIntegration.AllianceHandler.GetMaximumAmount(shipClass.ClassType));
+                    return AddToActiveShips(alliance.ToString(), shipClass, AllianceIntegration.AllianceHandler.GetMaximumAmount(factionTag, shipClass.ClassType));
                 }
                 else
                 {
@@ -35,7 +35,7 @@ namespace ShipClassesPlugin.LimitedActiveShips
             return true;
         }
 
-        public bool AddToActiveShips(String tagOrGuid, ShipClassDefinition shipClass, int Maximum)
+        public static bool AddToActiveShips(String tagOrGuid, ShipClassDefinition shipClass, int Maximum)
         {
             if (shipClass.MaximumActiveAmount == 0)
             {

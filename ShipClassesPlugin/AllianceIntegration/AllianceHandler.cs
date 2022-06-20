@@ -8,6 +8,16 @@ namespace ShipClassesPlugin.AllianceIntegration
 {
     public static class AllianceHandler
     {
+        public static Guid GetAllianceId(string factionTag)
+        {
+            if (!ShipClassPlugin.AlliancePluginEnabled)
+            {
+                return Guid.Empty;
+            }
+            object[] MethodInput = new object[] { factionTag };
+            return (Guid)ShipClassPlugin.GetAllianceId?.Invoke(null, MethodInput);
+        }
+
         public static int GetMaximumAmount(string factionTag, string classType)
         {
             if (!ShipClassPlugin.AlliancePluginEnabled)

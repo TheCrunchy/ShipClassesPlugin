@@ -24,6 +24,7 @@ using VRage.Game.Components;
 using System.Collections.Concurrent;
 using Torch.Managers;
 using Torch.API.Plugins;
+using ShipClassesPlugin.LimitedActiveShips;
 
 namespace ShipClassesPlugin
 {
@@ -169,6 +170,7 @@ namespace ShipClassesPlugin
             //}
         }
         public static MethodInfo GetAllianceLimit;
+        public static MethodInfo GetAllianceId;
         public static Boolean AlliancePluginEnabled = false;
         private void SessionChanged(ITorchSession session, TorchSessionState state)
         {
@@ -204,6 +206,7 @@ namespace ShipClassesPlugin
                     try
                     {
                         GetAllianceLimit = All.GetType().GetMethod("GetMaximumForShipClassType", BindingFlags.Public | BindingFlags.Static, null, new Type[2] { typeof(string), typeof(string) }, null);
+                        GetAllianceId = All.GetType().GetMethod("GetAllianceId", BindingFlags.Public | BindingFlags.Static, null, new Type[1] { typeof(string) }, null);
                     }
                     catch (Exception ex)
                     {
@@ -256,7 +259,7 @@ namespace ShipClassesPlugin
             public static Boolean DoChecks(MyFunctionalBlock block, ShipClassDefinition shipDefinition, LiveShip ship)
             {
 
-
+                if (ActiveLimitsHandler.)
                 if (!ship.HasWorkingBeacon)
                 {
                     block.Enabled = false;

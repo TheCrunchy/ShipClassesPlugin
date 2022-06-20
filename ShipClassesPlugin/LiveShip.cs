@@ -21,7 +21,8 @@ namespace ShipClassesPlugin
 
         //we want to only do the checks for if they should be enabled on a timer, if the time isnt above that, we just dont allow the block to be enabled if it has the boolean as false 
         public DateTime NextCheck = DateTime.Now;
-
+        public DateTime NextActiveLimitCheck = DateTime.Now;
+        public bool KeepDisabled = false;
         public Boolean IsThisBlockAtMaxLimit(string blockPairName, BlocksDefinition definition, BlockId id)
         {
             if (definition.MaximumPoints == 0)

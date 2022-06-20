@@ -271,20 +271,25 @@ namespace ShipClassesPlugin
                 ctx.GetPattern(update2).Prefixes.Add(updatePatch);
             }
             static int count = 0;
-            public static Boolean DoChecks(MyFunctionalBlock block, ShipClassDefinition shipDefinition, LiveShip ship, Boolean DoActiveChecks = false)
+
+            public static Boolean DoActiveChecks(MyFunctionalBlock block, ShipClassDefinition shipDefinition, LiveShip ship)
             {
-                if (DoActiveChecks)
+                if (!ActiveLimitsHandler.CanShipBeActive(block.GetOwnerFactionTag(), shipDefinition, block.CubeGrid.EntityId))
                 {
-                    if (!ActiveLimitsHandler.CanShipBeActive(block.GetOwnerFactionTag(), shipDefinition, block.CubeGrid.EntityId))
+                    BoundingSphereD sphere = new BoundingSphereD(block.CubeGrid.PositionComp.GetPosition(), 5000);
+                    foreach (MyCharacter character in MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere).OfType<MyCharacter>())
                     {
-                        BoundingSphereD sphere = new BoundingSphereD(block.CubeGrid.PositionComp.GetPosition(), 5000);
-                        foreach (MyCharacter character in MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere).OfType<MyCharacter>())
-                        {
-                            SendMessage("Ship Classes", $"Ship {block.CubeGrid.DisplayNameText} could not be activated. Maximum active limit met.", Color.Red, (long)character.ControlSteamId);
-                        }
-                        return false;
+                        SendMessage("Ship Classes", $"Ship {block.CubeGrid.DisplayNameText} could not be activated. Maximum active limit met.", Color.Red, (long)character.ControlSteamId);
                     }
+                    return false;
                 }
+
+                return true;
+            }
+
+            public static Boolean DoChecks(MyFunctionalBlock block, ShipClassDefinition shipDefinition, LiveShip ship)
+            {
+
                 //todo move this to patch beacon turn on 
 
                 if (EnableTheBlock.TryGetValue(block.EntityId, out Boolean val))
@@ -305,8 +310,6 @@ namespace ShipClassesPlugin
                     //now we need to add to the ship since we havent had this block before.
                     if (ship.CanBlockFunction(block.BlockDefinition.BlockPairName))
                     {
-
-
                         EnableTheBlock.Add(block.EntityId, true);
                         ActiveShips[block.CubeGrid.EntityId] = ship;
                         return true;
@@ -325,6 +328,7 @@ namespace ShipClassesPlugin
             }
             static ConcurrentDictionary<long, Vector3> AccelForces = new ConcurrentDictionary<long, Vector3>();
             static Dictionary<long, int> UpdateTicks = new Dictionary<long, int>();
+
             public static Boolean KeepDisabled(MyFunctionalBlock __instance)
             {
                 //  Log.Info("1");
@@ -361,6 +365,30 @@ namespace ShipClassesPlugin
                 {
                     return true;
                 }
+                if (ActiveShips.TryGetValue(__instance.CubeGrid.EntityId, out LiveShip shipT))
+                {
+                    if (DateTime.Now >= shipT.NextActiveLimitCheck)
+                    {
+                        shipT.NextActiveLimitCheck = DateTime.Now.AddSeconds(config.SecondsBetweenBeaconChecks);
+                        if (DoActiveChecks(__instance, DefinedClasses[shipT.ClassName], shipT))
+                        {
+                            shipT.KeepDisabled = false;
+                        }
+                        else
+                        {
+                            shipT.KeepDisabled = true;
+                            __instance.Enabled = false;
+                            return false;
+                        }
+                    }
+
+                    if (shipT.KeepDisabled)
+                    {
+                        __instance.Enabled = false;
+                        return false;
+                    }
+                }
+
                 if (LimitedBlocks.TryGetValue(__instance.BlockDefinition.BlockPairName, out List<String> ShipClasses))
                 {
                     //  Log.Info("HAS LIMITED BLOCK");
@@ -387,18 +415,17 @@ namespace ShipClassesPlugin
                         //do any checks here for if the grid has a pilot
                         if (DateTime.Now >= ship.NextCheck)
                         {
-
+                            ship.NextCheck = DateTime.Now.AddSeconds(config.SecondsBetweenBeaconChecks);
                             //first check if it has a pilot before doing this
                             if (ship.RequiresPilot && !ship.HasPilot)
                             {
-                                ship.NextCheck = DateTime.Now.AddSeconds(config.SecondsBetweenBeaconChecks);
+
                                 __instance.Enabled = false;
                                 return false;
                             }
                             var Beacons = __instance.CubeGrid.GetFatBlocks().OfType<MyBeacon>();
                             ship.HasWorkingBeacon = false;
 
-                            ship.NextCheck = DateTime.Now.AddSeconds(config.SecondsBetweenBeaconChecks);
                             ShipClassDefinition shipClass = DefinedClasses[ship.ClassName];
 
                             foreach (MyBeacon beacon in Beacons)
@@ -414,20 +441,12 @@ namespace ShipClassesPlugin
                             ActiveShips[__instance.CubeGrid.EntityId] = ship;
                             if (ship.HasWorkingBeacon)
                             {
-                                if (DoChecks(__instance, DefinedClasses[ship.ClassName], ship, true))
+                                if (DoChecks(__instance, DefinedClasses[ship.ClassName], ship))
                                 {
                                     return true;
                                 }
                                 else
                                 {
-
-                                    foreach (MyBeacon beacon in Beacons)
-                                    {
-                                        if (beacon.BlockDefinition.BlockPairName.Equals(shipClass.BeaconBlockPairName))
-                                        {
-                                            beacon.Enabled = false;
-                                        }
-                                    }
                                     ship.HasWorkingBeacon = false;
                                     __instance.Enabled = false;
                                     return false;
@@ -494,7 +513,12 @@ namespace ShipClassesPlugin
                             }
                             if (newShip.HasWorkingBeacon)
                             {
-                                if (DoChecks(__instance, DefinedClasses[newShip.ClassName], newShip, true))
+                                if (DoActiveChecks(__instance, DefinedClasses[shipT.ClassName], shipT))
+                                {
+                                    shipT.KeepDisabled = false;
+                                    __instance.Enabled = true;
+                                }
+                                if (DoChecks(__instance, DefinedClasses[newShip.ClassName], newShip))
                                 {
 
                                     return true;
@@ -502,6 +526,7 @@ namespace ShipClassesPlugin
                                 else
                                 {
                                     newShip.HasWorkingBeacon = false;
+                                    newShip.KeepDisabled = true;
                                     __instance.Enabled = false;
                                     return false;
                                 }

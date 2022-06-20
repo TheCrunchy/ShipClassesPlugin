@@ -479,7 +479,7 @@ namespace ShipClassesPlugin
                             }
                             if (newShip.HasWorkingBeacon)
                             {
-                                if (DoActiveChecks(__instance, DefinedClasses[ship.ClassName], ship))
+                                if (!DoActiveChecks(__instance, DefinedClasses[ship.ClassName], ship))
                                 {
                                     ship.KeepDisabled = true;
                                     __instance.Enabled = false;

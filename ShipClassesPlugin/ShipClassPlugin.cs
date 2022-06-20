@@ -259,7 +259,10 @@ namespace ShipClassesPlugin
             public static Boolean DoChecks(MyFunctionalBlock block, ShipClassDefinition shipDefinition, LiveShip ship)
             {
 
-                if (ActiveLimitsHandler.)
+                if (!ActiveLimitsHandler.CanShipBeActive(block.GetOwnerFactionTag(), shipDefinition))
+                {
+                    return false;
+                }
                 if (!ship.HasWorkingBeacon)
                 {
                     block.Enabled = false;

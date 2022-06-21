@@ -361,8 +361,22 @@ namespace ShipClassesPlugin
                 //          doSpeedUpdate = true;
                 //      }
                 //  }
+                if (!__instance.Enabled || !__instance.IsFunctional)
+                {
+                    return false;
+                }
                 if (!LoadedFiles)
                 {
+                    return true;
+                }
+                if (__instance.GetOwnerFactionTag().Length > 3)
+                {
+                  //  Log.Info("npc");
+                    return true;
+                }
+                if (!LimitedBlocks.ContainsKey(__instance.BlockDefinition.BlockPairName))
+                {
+           //         Log.Info("not a limited block");
                     return true;
                 }
                 if (ActiveShips.TryGetValue(__instance.CubeGrid.EntityId, out LiveShip ship))
@@ -389,20 +403,21 @@ namespace ShipClassesPlugin
                     {
                         ship.NextCheck = DateTime.Now.AddSeconds(config.SecondsBetweenBeaconChecks);
                         //first check if it has a pilot before doing this
-                        if (DoActiveChecks(__instance, DefinedClasses[ship.ClassName], ship))
-                        {
-                            ship.KeepDisabled = false;
-                        }
-                        else
-                        {
-                            ship.KeepDisabled = true;
-                            __instance.Enabled = false;
-                            return false;
-                        }
+                        //if (DoActiveChecks(__instance, DefinedClasses[ship.ClassName], ship))
+                        //{
+                        //    ship.KeepDisabled = false;
+                        //}
+                        //else
+                        //{
+                        //    ship.KeepDisabled = true;
+                        //    __instance.Enabled = false;
+                        //    return false;
+                        //}
                         if (ship.RequiresPilot && !ship.HasPilot)
                         {
 
                             __instance.Enabled = false;
+                          //  Log.Info("requires pilot");
                             return false;
                         }
                         var Beacons = __instance.CubeGrid.GetFatBlocks().OfType<MyBeacon>();
@@ -412,11 +427,16 @@ namespace ShipClassesPlugin
 
                         foreach (MyBeacon beacon in Beacons)
                         {
+                           // Log.Info(beacon.BlockDefinition.BlockPairName);
                             if (beacon.BlockDefinition.BlockPairName.Equals(shipClass.BeaconBlockPairName))
                             {
                                 if (beacon.IsFunctional && beacon.Enabled)
                                 {
                                     ship.HasWorkingBeacon = true;
+                                    // b = beacon;
+                                //    beacon.Components.Get<MyRadioBroadcaster>().ChangeBroadcastRadius(50000);
+                                //    b.Radius = 50000;
+                                  //  Log.Info("found a working beacon");
                                 }
                             }
                         }
@@ -425,6 +445,7 @@ namespace ShipClassesPlugin
                     if (ship.KeepDisabled)
                     {
                         __instance.Enabled = false;
+                     //   Log.Info("keep disabled");
                         return false;
                     }
 
@@ -432,18 +453,25 @@ namespace ShipClassesPlugin
                     {
                         if (DoChecks(__instance, DefinedClasses[ship.ClassName], ship))
                         {
+                            //  ship.KeepDisabled = false;
+                        //    Log.Info("Ship has working beacon and can be added to limits");
+                            ActiveShips[__instance.CubeGrid.EntityId] = ship;
                             return true;
                         }
                         else
                         {
-                            ship.HasWorkingBeacon = false;
                             __instance.Enabled = false;
+                        //    Log.Info("Ship cant be added to limits");
+                            ActiveShips[__instance.CubeGrid.EntityId] = ship;
                             return false;
                         }
                     }
-                    ActiveShips[__instance.CubeGrid.EntityId] = ship;
-        
-
+                    else
+                    {
+                     //   Log.Info("no working beacon");
+                       __instance.Enabled = false;
+                        return false;
+                    }
                 }
                 else
                 {
@@ -462,6 +490,7 @@ namespace ShipClassesPlugin
                             {
                                 foreach (MyBeacon beacon in Beacons)
                                 {
+                                 //   Log.Info(beacon.BlockDefinition.BlockPairName);
                                     if (beacon.BlockDefinition.BlockPairName.Equals(def.BeaconBlockPairName))
                                     {
                                         if (beacon.IsFunctional && beacon.Enabled)
@@ -477,36 +506,36 @@ namespace ShipClassesPlugin
                                     }
                                 }
                             }
-                            if (newShip.HasWorkingBeacon)
+                        }
+                        if (newShip.HasWorkingBeacon)
+                        {
+                            //if (!DoActiveChecks(__instance, DefinedClasses[newShip.ClassName], newShip))
+                            //{
+                            //    newShip.KeepDisabled = true;
+                            //    __instance.Enabled = false;
+                            //    return false;
+                            //}
+                            if (DoChecks(__instance, DefinedClasses[newShip.ClassName], newShip))
                             {
-                                if (!DoActiveChecks(__instance, DefinedClasses[newShip.ClassName], newShip))
-                                {
-                                    newShip.KeepDisabled = true;
-                                    __instance.Enabled = false;
-                                    return false;
-                                }
-                                if (DoChecks(__instance, DefinedClasses[newShip.ClassName], newShip))
-                                {
-
-                                    return true;
-                                }
-                                else
-                                {
-                                    newShip.KeepDisabled = true;
-                                    __instance.Enabled = false;
-                                    return false;
-                                }
+                                //     newShip.KeepDisabled = false;
+                           //     Log.Info("new ship true");
+                                return true;
                             }
                             else
                             {
+                           //     Log.Info("new ship false");
+                                //   newShip.KeepDisabled = true;
                                 __instance.Enabled = false;
                                 return false;
                             }
-
+                        }
+                        else
+                        {
+                        //    Log.Info("new ship no beacon");
+                            __instance.Enabled = false;
+                            return false;
                         }
                     }
-
-
                 }
                 return true;
 

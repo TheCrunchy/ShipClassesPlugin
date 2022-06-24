@@ -379,7 +379,7 @@ namespace ShipClassesPlugin
            //         Log.Info("not a limited block");
                     return true;
                 }
-                if (ActiveShips.TryGetValue(__instance.CubeGrid.EntityId, out LiveShip ship))
+                if (ActiveShips.TryGetValue(__instance.CubeGrid.GetBiggestGridInGroup().EntityId, out LiveShip ship))
                 {
 
                     if (ship.HasToBeStation)
@@ -420,7 +420,7 @@ namespace ShipClassesPlugin
                           //  Log.Info("requires pilot");
                             return false;
                         }
-                        var Beacons = __instance.CubeGrid.GetFatBlocks().OfType<MyBeacon>();
+                        var Beacons = __instance.CubeGrid.GetBiggestGridInGroup().GetFatBlocks().OfType<MyBeacon>();
                         ship.HasWorkingBeacon = false;
 
                         ShipClassDefinition shipClass = DefinedClasses[ship.ClassName];
@@ -455,14 +455,14 @@ namespace ShipClassesPlugin
                         {
                             //  ship.KeepDisabled = false;
                         //    Log.Info("Ship has working beacon and can be added to limits");
-                            ActiveShips[__instance.CubeGrid.EntityId] = ship;
+                            ActiveShips[__instance.CubeGrid.GetBiggestGridInGroup().EntityId] = ship;
                             return true;
                         }
                         else
                         {
                             __instance.Enabled = false;
                         //    Log.Info("Ship cant be added to limits");
-                            ActiveShips[__instance.CubeGrid.EntityId] = ship;
+                            ActiveShips[__instance.CubeGrid.GetBiggestGridInGroup().EntityId] = ship;
                             return false;
                         }
                     }
@@ -481,7 +481,7 @@ namespace ShipClassesPlugin
 
                         LiveShip newShip = new LiveShip();
                         newShip.NextCheck = DateTime.Now.AddSeconds(config.SecondsBetweenBeaconChecks);
-                        newShip.GridEntityId = __instance.CubeGrid.EntityId;
+                        newShip.GridEntityId = __instance.CubeGrid.GetBiggestGridInGroup().EntityId;
                         foreach (String s in ShipClasses)
                         {
                             //fuck it, its using whichever beacon it finds first, if people use multiple tiers they can cry about it 

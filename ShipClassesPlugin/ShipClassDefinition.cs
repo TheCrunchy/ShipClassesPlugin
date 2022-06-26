@@ -15,6 +15,8 @@ namespace ShipClassesPlugin
         public string ClassSubtype = "Frigate";
         public int MaximumActiveAmount = 5;
         public int ClassPriority = 1;
+        public int MinimumBlockCount = 1;
+        public int MaximumBlockCount = 1;
         public LimitTypeEnum LimitType = LimitTypeEnum.NONE;
         public string BeaconBlockPairName = "SUPERDUPERBEACON";
         public List<BlocksDefinition> DefinedBlocks = new List<BlocksDefinition>();

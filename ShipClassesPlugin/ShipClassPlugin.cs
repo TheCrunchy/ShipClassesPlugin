@@ -29,6 +29,7 @@ using Sandbox.Game.Entities.Character;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
 using System.Text;
+using System.Collections.ObjectModel;
 
 namespace ShipClassesPlugin
 {
@@ -41,6 +42,37 @@ namespace ShipClassesPlugin
             SetupConfig();
 
         }
+        //  Log.Info("1");
+        //  var speed = __instance.CubeGrid.Physics.Speed;
+        //  var maxSpeed = 10;
+        //  if (speed > maxSpeed)
+        //  {
+        //      //var resistance = 50f * (__instance.CubeGrid.Physics.Mass * 2 )* (1 - (maxSpeed / speed));
+        //      //Vector3 velocity = __instance.CubeGrid.Physics.LinearVelocity * -resistance;
+
+        ////      __instance.CubeGrid.Physics.AddForce(MyPhysicsForceType.APPLY_WORLD_FORCE, velocity, __instance.CubeGrid.Physics.CenterOfMassWorld, null, 10);
+
+        //      var grid = __instance.CubeGrid;
+        //      bool doSpeedUpdate = false;
+        //      if (UpdateTicks.TryGetValue(grid.EntityId, out int ticks))
+        //      {
+        //          if (ticks == 10)
+        //          {
+        //              UpdateTicks[grid.EntityId] = 1;
+        //              doSpeedUpdate = true;
+        //          }
+        //          else
+        //          {
+        //              UpdateTicks[grid.EntityId] += 1;
+        //          }
+        //      }
+        //      else
+        //      {
+        //          UpdateTicks.Add(grid.EntityId, 1);
+        //          doSpeedUpdate = true;
+        //      }
+        //  }
+
         public static void SendMessage(string author, string message, Color color, long steamID)
         {
             Logger _chatLog = LogManager.GetLogger("Chat");
@@ -274,7 +306,7 @@ namespace ShipClassesPlugin
 
             public static Boolean DoActiveChecks(MyFunctionalBlock block, ShipClassDefinition shipDefinition, LiveShip ship)
             {
-                if (!ActiveLimitsHandler.CanShipBeActive(block.GetOwnerFactionTag(), shipDefinition, block.CubeGrid.EntityId))
+                if (!ActiveLimitsHandler.CanShipBeActive(block.GetOwnerFactionTag(), shipDefinition, block.CubeGrid.GetBiggestGridInGroup().EntityId))
                 {
                     BoundingSphereD sphere = new BoundingSphereD(block.CubeGrid.PositionComp.GetPosition(), 5000);
                     foreach (MyCharacter character in MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere).OfType<MyCharacter>())
@@ -329,38 +361,50 @@ namespace ShipClassesPlugin
             static ConcurrentDictionary<long, Vector3> AccelForces = new ConcurrentDictionary<long, Vector3>();
             static Dictionary<long, int> UpdateTicks = new Dictionary<long, int>();
 
+            public static bool DoBlockCountChecks(MyCubeGrid grid, LiveShip ship)
+            {
+                var blocksCount = 0;
+
+                foreach (var item in grid.GetConnectedGrids(VRage.Game.ModAPI.GridLinkTypeEnum.Logical))
+                {
+                    blocksCount += item.BlocksCount;
+                }
+                if (!ship.MetMinimumOnce)
+                {
+                    if (blocksCount < DefinedClasses[ship.ClassName].MinimumBlockCount)
+                    {
+                        ship.KeepDisabled = true;
+                        ship.HasWorkingBeacon = false;
+                        ship.NextCheck = DateTime.Now.AddMinutes(1);
+                        return false;
+                    }
+                    else
+                    {
+                        ship.MetMinimumOnce = true;
+                        ship.KeepDisabled = false;
+                    }
+                }
+
+                if (blocksCount > DefinedClasses[ship.ClassName].MaximumBlockCount)
+                {
+                    ship.KeepDisabled = true;
+                    ship.HasWorkingBeacon = false;
+                    ship.NextCheck = DateTime.Now.AddMinutes(1);
+                    return false;
+                }
+                else
+                {
+                    ship.KeepDisabled = false;
+                }
+
+
+
+                return true;
+            }
+
+
             public static Boolean KeepDisabled(MyFunctionalBlock __instance)
             {
-                //  Log.Info("1");
-                //  var speed = __instance.CubeGrid.Physics.Speed;
-                //  var maxSpeed = 10;
-                //  if (speed > maxSpeed)
-                //  {
-                //      //var resistance = 50f * (__instance.CubeGrid.Physics.Mass * 2 )* (1 - (maxSpeed / speed));
-                //      //Vector3 velocity = __instance.CubeGrid.Physics.LinearVelocity * -resistance;
-
-                ////      __instance.CubeGrid.Physics.AddForce(MyPhysicsForceType.APPLY_WORLD_FORCE, velocity, __instance.CubeGrid.Physics.CenterOfMassWorld, null, 10);
-
-                //      var grid = __instance.CubeGrid;
-                //      bool doSpeedUpdate = false;
-                //      if (UpdateTicks.TryGetValue(grid.EntityId, out int ticks))
-                //      {
-                //          if (ticks == 10)
-                //          {
-                //              UpdateTicks[grid.EntityId] = 1;
-                //              doSpeedUpdate = true;
-                //          }
-                //          else
-                //          {
-                //              UpdateTicks[grid.EntityId] += 1;
-                //          }
-                //      }
-                //      else
-                //      {
-                //          UpdateTicks.Add(grid.EntityId, 1);
-                //          doSpeedUpdate = true;
-                //      }
-                //  }
                 if (!__instance.Enabled || !__instance.IsFunctional)
                 {
                     return false;
@@ -371,17 +415,16 @@ namespace ShipClassesPlugin
                 }
                 if (__instance.GetOwnerFactionTag().Length > 3)
                 {
-                  //  Log.Info("npc");
+                    //  Log.Info("npc");
                     return true;
                 }
                 if (!LimitedBlocks.ContainsKey(__instance.BlockDefinition.BlockPairName))
                 {
-           //         Log.Info("not a limited block");
+                    //         Log.Info("not a limited block");
                     return true;
                 }
                 if (ActiveShips.TryGetValue(__instance.CubeGrid.GetBiggestGridInGroup().EntityId, out LiveShip ship))
                 {
-
                     if (ship.HasToBeStation)
                     {
                         if (!__instance.CubeGrid.IsStatic)
@@ -402,22 +445,31 @@ namespace ShipClassesPlugin
                     if (DateTime.Now >= ship.NextCheck)
                     {
                         ship.NextCheck = DateTime.Now.AddSeconds(config.SecondsBetweenBeaconChecks);
-                        //first check if it has a pilot before doing this
-                        //if (DoActiveChecks(__instance, DefinedClasses[ship.ClassName], ship))
-                        //{
-                        //    ship.KeepDisabled = false;
-                        //}
-                        //else
-                        //{
-                        //    ship.KeepDisabled = true;
-                        //    __instance.Enabled = false;
-                        //    return false;
-                        //}
+                        if (!ship.HasBeenAddedToActive)
+                        {
+                            if (!DoActiveChecks(__instance, DefinedClasses[ship.ClassName], ship))
+                            {
+                                ship.KeepDisabled = true;
+                                __instance.Enabled = false;
+                                return false;
+                            }
+                            else
+                            {
+                                ship.KeepDisabled = false;
+                            }
+                        }
+
+                        if (!DoBlockCountChecks(__instance.CubeGrid, ship))
+                        {
+                            __instance.Enabled = false;
+                            return false;
+                        }
+
                         if (ship.RequiresPilot && !ship.HasPilot)
                         {
 
                             __instance.Enabled = false;
-                          //  Log.Info("requires pilot");
+                            //  Log.Info("requires pilot");
                             return false;
                         }
                         var Beacons = __instance.CubeGrid.GetBiggestGridInGroup().GetFatBlocks().OfType<MyBeacon>();
@@ -427,16 +479,12 @@ namespace ShipClassesPlugin
 
                         foreach (MyBeacon beacon in Beacons)
                         {
-                           // Log.Info(beacon.BlockDefinition.BlockPairName);
+                            // Log.Info(beacon.BlockDefinition.BlockPairName);
                             if (beacon.BlockDefinition.BlockPairName.Equals(shipClass.BeaconBlockPairName))
                             {
                                 if (beacon.IsFunctional && beacon.Enabled)
                                 {
                                     ship.HasWorkingBeacon = true;
-                                    // b = beacon;
-                                //    beacon.Components.Get<MyRadioBroadcaster>().ChangeBroadcastRadius(50000);
-                                //    b.Radius = 50000;
-                                  //  Log.Info("found a working beacon");
                                 }
                             }
                         }
@@ -445,31 +493,33 @@ namespace ShipClassesPlugin
                     if (ship.KeepDisabled)
                     {
                         __instance.Enabled = false;
-                     //   Log.Info("keep disabled");
+                        //   Log.Info("keep disabled");
                         return false;
                     }
 
+
+                    //todo make this into one method instead of repeating myself 
                     if (ship.HasWorkingBeacon)
                     {
                         if (DoChecks(__instance, DefinedClasses[ship.ClassName], ship))
                         {
                             //  ship.KeepDisabled = false;
-                        //    Log.Info("Ship has working beacon and can be added to limits");
+                            //    Log.Info("Ship has working beacon and can be added to limits");
                             ActiveShips[__instance.CubeGrid.GetBiggestGridInGroup().EntityId] = ship;
                             return true;
                         }
                         else
                         {
                             __instance.Enabled = false;
-                        //    Log.Info("Ship cant be added to limits");
+                            //    Log.Info("Ship cant be added to limits");
                             ActiveShips[__instance.CubeGrid.GetBiggestGridInGroup().EntityId] = ship;
                             return false;
                         }
                     }
                     else
                     {
-                     //   Log.Info("no working beacon");
-                       __instance.Enabled = false;
+                        //   Log.Info("no working beacon");
+                        __instance.Enabled = false;
                         return false;
                     }
                 }
@@ -490,7 +540,7 @@ namespace ShipClassesPlugin
                             {
                                 foreach (MyBeacon beacon in Beacons)
                                 {
-                                 //   Log.Info(beacon.BlockDefinition.BlockPairName);
+                                    //   Log.Info(beacon.BlockDefinition.BlockPairName);
                                     if (beacon.BlockDefinition.BlockPairName.Equals(def.BeaconBlockPairName))
                                     {
                                         if (beacon.IsFunctional && beacon.Enabled)
@@ -509,21 +559,25 @@ namespace ShipClassesPlugin
                         }
                         if (newShip.HasWorkingBeacon)
                         {
-                            //if (!DoActiveChecks(__instance, DefinedClasses[newShip.ClassName], newShip))
-                            //{
-                            //    newShip.KeepDisabled = true;
-                            //    __instance.Enabled = false;
-                            //    return false;
-                            //}
+
+                            if (!DoBlockCountChecks(__instance.CubeGrid, newShip))
+                            {
+                                __instance.Enabled = false;
+                                return false;
+                            }
+                            if (!DoActiveChecks(__instance, DefinedClasses[newShip.ClassName], newShip))
+                            {
+
+                            }
                             if (DoChecks(__instance, DefinedClasses[newShip.ClassName], newShip))
                             {
                                 //     newShip.KeepDisabled = false;
-                           //     Log.Info("new ship true");
+                                //     Log.Info("new ship true");
                                 return true;
                             }
                             else
                             {
-                           //     Log.Info("new ship false");
+                                //     Log.Info("new ship false");
                                 //   newShip.KeepDisabled = true;
                                 __instance.Enabled = false;
                                 return false;
@@ -531,7 +585,7 @@ namespace ShipClassesPlugin
                         }
                         else
                         {
-                        //    Log.Info("new ship no beacon");
+                            //    Log.Info("new ship no beacon");
                             __instance.Enabled = false;
                             return false;
                         }

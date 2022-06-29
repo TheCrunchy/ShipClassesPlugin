@@ -49,7 +49,7 @@ namespace ShipClassesPlugin
                         SpeedMessage data = new SpeedMessage();
                         data.EntityId = mod.EntityId;
                         data.WarpSpeed = speed;
-
+                        Context.Respond("found a drive");
                         MyAPIGateway.Multiplayer.SendMessageToServer(4378, MyAPIGateway.Utilities.SerializeToBinary<SpeedMessage>(data));
                     }
                 }

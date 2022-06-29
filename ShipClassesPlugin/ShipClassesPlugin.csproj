@@ -36,6 +36,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\4 Torch Server\DedicatedServer64\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="Nexus">
+      <HintPath>..\..\..\Nexus (Server Sectoring &amp; DataSync)\Nexus.dll</HintPath>
+    </Reference>
     <Reference Include="NLog">
       <HintPath>..\..\..\4 Torch Server\DedicatedServer64\NLog.dll</HintPath>
     </Reference>
@@ -94,6 +97,7 @@
     <Compile Include="FileUtils.cs" />
     <Compile Include="LimitedActiveShips\ActiveLimitsHandler.cs" />
     <Compile Include="LiveShip.cs" />
+    <Compile Include="NexusGridPatch.cs" />
     <Compile Include="ShipClassDefinition.cs" />
     <Compile Include="ShipClassPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

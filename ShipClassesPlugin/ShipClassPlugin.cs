@@ -30,6 +30,7 @@ using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
 using System.Text;
 using System.Collections.ObjectModel;
+using static ShipClassesPlugin.Commands;
 
 namespace ShipClassesPlugin
 {
@@ -43,8 +44,8 @@ namespace ShipClassesPlugin
 
         }
         //  Log.Info("1");
-        //  var speed = __instance.CubeGrid.Physics.Speed;
-        //  var maxSpeed = 10;
+        //var speed = __instance.CubeGrid.Physics.Speed;
+        //var maxSpeed = 10;
         //  if (speed > maxSpeed)
         //  {
         //      //var resistance = 50f * (__instance.CubeGrid.Physics.Mass * 2 )* (1 - (maxSpeed / speed));
@@ -53,7 +54,7 @@ namespace ShipClassesPlugin
         ////      __instance.CubeGrid.Physics.AddForce(MyPhysicsForceType.APPLY_WORLD_FORCE, velocity, __instance.CubeGrid.Physics.CenterOfMassWorld, null, 10);
 
         //      var grid = __instance.CubeGrid;
-        //      bool doSpeedUpdate = false;
+        //bool doSpeedUpdate = false;
         //      if (UpdateTicks.TryGetValue(grid.EntityId, out int ticks))
         //      {
         //          if (ticks == 10)
@@ -96,23 +97,7 @@ namespace ShipClassesPlugin
             [ProtoMember(2)]
             public long SendingPlayerID { get; set; }
         }
-        [ProtoContract]
-        public class SpeedMessage
-        {
-            [ProtoMember(1)]
-            public long EntityId { get; set; }
-            [ProtoMember(2)]
-            public double WarpSpeed { get; set; }
-        }
 
-        public static void YeetThisFuckingDrive(long entityId)
-        {
-            SpeedMessage data = new SpeedMessage();
-            data.EntityId = entityId;
-            data.WarpSpeed = -1;
-
-            MyAPIGateway.Multiplayer.SendMessageToServer(4378, MyAPIGateway.Utilities.SerializeToBinary<SpeedMessage>(data));
-        }
 
 
         private TorchSessionManager sessionManager;
@@ -201,7 +186,7 @@ namespace ShipClassesPlugin
                 {
                     if (block.BlockDefinition.BlockPairName.Equals("FSDrive"))
                     {
-                        YeetThisFuckingDrive(entity.EntityId);
+                    //    YeetThisFuckingDrive(entity.EntityId);
                         //      Log.Info("YEET THIS FUCKING DRIVE");
                     }
                 }
@@ -263,11 +248,29 @@ namespace ShipClassesPlugin
                     AlliancePluginEnabled = true;
                 }
 
+                MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(4378, ReceiveWarpSpeed);
 
                 LoadedFiles = true;
             }
         }
 
+        private void ReceiveWarpSpeed(ushort channel, byte[] data, ulong sender, bool fromServer)
+        {
+            var message = MyAPIGateway.Utilities.SerializeFromBinary<SpeedMessage>(data);
+            if (message == null)
+                return;
+            Log.Info("got a speed message");
+            if (!MyAPIGateway.Entities.TryGetEntityById(message.EntityId, out var entity))
+                return;
+
+            var block = entity as MyFunctionalBlock;
+            if (block != null)
+            {
+                if (ActiveShips.TryGetValue(block.CubeGrid.GetBiggestGridInGroup().EntityId, out var ship)){
+                    Log.Info($"{message.WarpSpeed} SPEED");
+                }
+            }
+        }
         //Load the config files into this dictionary
         public static Dictionary<String, ShipClassDefinition> DefinedClasses = new Dictionary<string, ShipClassDefinition>();
 
@@ -301,6 +304,7 @@ namespace ShipClassesPlugin
             {
                 ctx.GetPattern(update).Prefixes.Add(updatePatch);
                 ctx.GetPattern(update2).Prefixes.Add(updatePatch);
+                ctx.GetPattern(enabledUpdate).Prefixes.Add(functionalBlockPatch);
             }
             static int count = 0;
 
@@ -360,6 +364,32 @@ namespace ShipClassesPlugin
             }
             static ConcurrentDictionary<long, Vector3> AccelForces = new ConcurrentDictionary<long, Vector3>();
             static Dictionary<long, int> UpdateTicks = new Dictionary<long, int>();
+
+            internal static readonly MethodInfo enabledUpdate =
+          typeof(MyFunctionalBlock).GetMethod("OnEnabledChanged", BindingFlags.Instance | BindingFlags.NonPublic) ??
+          throw new Exception("Failed to find patch method");
+
+            internal static readonly MethodInfo functionalBlockPatch =
+                typeof(FunctionalBlockPatch).GetMethod(nameof(PatchTurningOn), BindingFlags.Static | BindingFlags.Public) ??
+                throw new Exception("Failed to find patch method");
+
+            public static bool PatchTurningOn(MyFunctionalBlock __instance)
+            {
+                if (EnableTheBlock.TryGetValue(__instance.EntityId, out Boolean val))
+                {
+
+                    if (!val)
+                    {
+                        __instance.Enabled = false;
+                        return false;
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+                return true;
+            }
 
             public static bool DoBlockCountChecks(MyCubeGrid grid, LiveShip ship)
             {
@@ -423,6 +453,25 @@ namespace ShipClassesPlugin
                     //         Log.Info("not a limited block");
                     return true;
                 }
+
+                //if (UpdateTicks.TryGetValue(__instance.CubeGrid.GetBiggestGridInGroup().EntityId, out int ticks))
+                //{
+                //    if (ticks == 250)
+                //    {
+                //        UpdateTicks[__instance.CubeGrid.GetBiggestGridInGroup().EntityId] = 1;
+                //        Log.Info(__instance.CubeGrid.Physics.Speed);
+                //    }
+                //    else
+                //    {
+                //        UpdateTicks[__instance.CubeGrid.GetBiggestGridInGroup().EntityId] += 1;
+                //    }
+                //}
+                //else
+                //{
+                //    UpdateTicks.Add(__instance.CubeGrid.GetBiggestGridInGroup().EntityId, 0);
+                //}
+
+
                 if (ActiveShips.TryGetValue(__instance.CubeGrid.GetBiggestGridInGroup().EntityId, out LiveShip ship))
                 {
                     if (ship.HasToBeStation)
@@ -455,6 +504,7 @@ namespace ShipClassesPlugin
                             }
                             else
                             {
+                                ship.HasBeenAddedToActive = true;
                                 ship.KeepDisabled = false;
                             }
                         }
@@ -567,7 +617,9 @@ namespace ShipClassesPlugin
                             }
                             if (!DoActiveChecks(__instance, DefinedClasses[newShip.ClassName], newShip))
                             {
-
+                                __instance.Enabled = false;
+                                newShip.KeepDisabled = true;
+                                return false;
                             }
                             if (DoChecks(__instance, DefinedClasses[newShip.ClassName], newShip))
                             {

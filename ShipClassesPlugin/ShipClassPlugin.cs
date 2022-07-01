@@ -248,7 +248,7 @@ namespace ShipClassesPlugin
                     AlliancePluginEnabled = true;
                 }
 
-                MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(4378, ReceiveWarpSpeed);
+               
 
                 LoadedFiles = true;
             }

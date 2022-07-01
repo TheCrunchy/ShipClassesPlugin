@@ -97,7 +97,6 @@
     <Compile Include="FileUtils.cs" />
     <Compile Include="LimitedActiveShips\ActiveLimitsHandler.cs" />
     <Compile Include="LiveShip.cs" />
-    <Compile Include="NexusGridPatch.cs" />
     <Compile Include="ShipClassDefinition.cs" />
     <Compile Include="ShipClassPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
